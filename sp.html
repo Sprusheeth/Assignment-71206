@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AuraEats - The Definitive Experience</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-hue: 265;
+            --primary-color: hsl(var(--primary-hue), 90%, 65%);
+            --primary-light: hsl(var(--primary-hue), 90%, 75%);
+            --primary-dark: hsl(var(--primary-hue), 90%, 55%);
+            --primary-gradient: linear-gradient(45deg, hsl(var(--primary-hue), 90%, 65%), hsl(310, 90%, 65%));
+            --bg-color: #F0F2F5;
+            --surface-color: rgba(255, 255, 255, 0.6);
+            --text-primary: #1C1C1E;
+            --text-secondary: #636366;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --success-color: #34C759;
+            --error-color: #FF3B30;
+            --rating-color: #FF9500;
+            --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition-slow: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --border-radius-sm: 8px;
+            --border-radius-md: 16px;
+            --border-radius-lg: 24px;
+        }
+        .dark-mode {
+            --bg-color: #000000;
+            --surface-color: rgba(28, 28, 30, 0.7);
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --border-color: rgba(255, 255, 255, 0.15);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Urbanist', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; overflow-x: hidden; transition: background-color var(--transition-slow), color var(--transition-slow); }
+        .app-container { max-width: 1600px; margin: 0 auto; }
+        .hidden { display: none !important; }
+
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease-out; }
+        #splash-screen i { font-size: 5rem; color: var(--primary-color); animation: bounce 1.5s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+
+        .page { display: none; padding: 0 20px; animation: fadeIn 0.5s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .page-detail { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 1001; transform: translateX(100%); transition: transform var(--transition-slow); overflow-y: auto; padding-bottom: 100px; }
+        .page-detail.active { transform: translateX(0); }
+
+        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 25px 0 15px 0; }
+        .location-info .location-name { font-size: 1.5rem; font-weight: 800; }
+        .location-info .location-desc { font-size: 1rem; color: var(--text-secondary); }
+        .action-icon { font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; transition: color var(--transition-fast); }
+        .action-icon:hover { color: var(--primary-color); }
+
+        .search-bar { margin: 15px 0; position: relative; }
+        .search-bar input { width: 100%; padding: 18px 25px 18px 60px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); background-color: var(--surface-color); color: var(--text-primary); font-size: 1.1rem; font-weight: 500; transition: all var(--transition-fast); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .search-bar input::placeholder { color: var(--text-secondary); }
+        .search-bar input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px hsla(var(--primary-hue), 90%, 65%, 0.3); }
+        .search-bar i { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 1.2rem; }
+
+        .horizontal-scroll-container { display: flex; overflow-x: auto; gap: 15px; padding: 10px 0 20px 0; scrollbar-width: none; -ms-overflow-style: none; }
+        .horizontal-scroll-container::-webkit-scrollbar { display: none; }
+        .category-card { flex-shrink: 0; padding: 12px 20px; border-radius: var(--border-radius-lg); border: 1px solid var(--border-color); background-color: var(--surface-color); cursor: pointer; transition: all var(--transition-fast); font-weight: 600; }
+        .category-card.active { background: var(--primary-gradient); color: white; border-color: transparent; }
+
+        .section-title { font-size: 1.4rem; font-weight: 700; margin: 25px 0 15px; display: flex; justify-content: space-between; align-items: center; }
+        .restaurant-list-grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
+        @media (min-width: 768px) { .restaurant-list-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1200px) { .restaurant-list-grid { grid-template-columns: repeat(3, 1fr); } }
+        .restaurant-card { background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); overflow: hidden; cursor: pointer; transition: all var(--transition-fast); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; align-items: center; padding: 15px; gap: 15px; }
+        .restaurant-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px var(--shadow-color); }
+        .restaurant-card-image-wrapper { flex-shrink: 0; width: 100px; height: 100px; position: relative; }
+        .restaurant-card-image { width: 100%; height: 100%; object-fit: cover; border-radius: var(--border-radius-md); }
+        .restaurant-card-info { flex-grow: 1; }
+        .restaurant-card-info h3 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: 700; }
+        .restaurant-card-meta { display: flex; align-items: center; gap: 15px; color: var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
+        .restaurant-card-meta i { color: var(--rating-color); }
+        .restaurant-card-offer { font-size: 0.8rem; font-weight: 600; color: var(--success-color); margin-top: 8px; }
+        .skeleton-card { background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 15px; display: flex; align-items: center; gap: 15px; }
+        .skeleton-image { width: 100px; height: 100px; background-color: var(--border-color); border-radius: var(--border-radius-md); }
+        .skeleton-text-group { flex-grow: 1; }
+        .skeleton-text { height: 20px; background-color: var(--border-color); border-radius: var(--border-radius-sm); margin-bottom: 10px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 500px; background-color: var(--surface-color); border: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; border-radius: var(--border-radius-lg); z-index: 1000; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 10px 30px var(--shadow-color); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer; width: 25%; transition: color var(--transition-fast); }
+        .nav-item i { font-size: 1.4rem; }
+        .nav-item span { font-size: 0.7rem; font-weight: 600; margin-top: 4px; }
+        .nav-item.active { color: var(--primary-color); }
+
+        .detail-header { position: relative; height: 35vh; }
+        .detail-hero-image { width: 100%; height: 100%; object-fit: cover; }
+        .detail-header-overlay { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-color) 0%, transparent 50%); }
+        .detail-back-btn, .detail-fav-btn { position: absolute; top: 20px; background: rgba(0,0,0,0.4); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .detail-back-btn { left: 20px; }
+        .detail-fav-btn { right: 20px; }
+        .detail-fav-btn.favorited { color: #FF453A; }
+        .detail-info-card { background-color: var(--bg-color); border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0; margin-top: -30px; position: relative; padding: 20px; }
+        .detail-info-card h1 { margin: 0; font-size: 2rem; font-weight: 800; }
+        .menu-category-title { font-size: 1.3rem; font-weight: 700; margin: 30px 0 15px 0; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; }
+        .menu-item { display: flex; align-items: flex-start; gap: 15px; padding: 20px 0; border-bottom: 1px solid var(--border-color); }
+        .menu-item-info { flex-grow: 1; }
+        .add-btn { flex-shrink: 0; background: var(--primary-light); color: var(--primary-dark); border: none; border-radius: var(--border-radius-sm); padding: 10px 20px; font-weight: 700; cursor: pointer; transition: background-color var(--transition-fast); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 1002; display: flex; justify-content: center; align-items: flex-end; opacity: 0; visibility: hidden; transition: opacity var(--transition-slow), visibility var(--transition-slow); }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { background-color: var(--surface-color); border: 1px solid var(--border-color); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); padding: 20px; border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0; width: 100%; max-width: 600px; box-shadow: 0 -10px 40px var(--shadow-color); transform: translateY(100%); transition: transform var(--transition-slow); }
+        .modal-overlay.visible .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+        .modal-close-btn { background: none; border: none; font-size: 1.8rem; color: var(--text-secondary); cursor: pointer; }
+        
+        #cart-modal .cart-item-list { max-height: 40vh; overflow-y: auto; }
+        .cart-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
+        .quantity-control { display: flex; align-items: center; gap: 10px; background-color: var(--border-color); border-radius: var(--border-radius-lg); padding: 5px; }
+        .quantity-control button { background: none; border: none; color: var(--text-primary); font-size: 1.2rem; width: 30px; cursor: pointer; }
+        .billing-details { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+        .billing-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 500; }
+        .delivery-options { margin: 15px 0; padding: 15px; background-color: rgba(0,0,0,0.1); border-radius: var(--border-radius-md); }
+        .delivery-options label { display: block; margin: 10px 0; cursor: pointer; font-weight: 500; }
+        #grand-total-row { font-weight: 800; font-size: 1.3rem; margin-top: 10px; }
+        .action-button { display: block; width: 100%; padding: 18px; background: var(--primary-gradient); color: white; border: none; border-radius: var(--border-radius-md); font-weight: 700; font-size: 1.1rem; cursor: pointer; margin-top: 20px; }
+        .coupon-section { margin-top: 15px; display: flex; gap: 10px; }
+        .coupon-section input { flex-grow: 1; padding: 10px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); }
+        .coupon-section button { padding: 10px 15px; border: none; background: var(--primary-color); color: white; border-radius: var(--border-radius-sm); font-weight: 600; cursor: pointer; }
+        .discount-row { color: var(--success-color); font-weight: 600; }
+
+        #order-tracker-page { background-color: #1A1A1A; color: white; }
+        .map-container { position: relative; width: 100%; height: 60vh; background-size: cover; background-position: center; border-radius: var(--border-radius-lg); overflow: hidden; }
+        .delivery-icon { position: absolute; width: 50px; height: 50px; border-radius: 50%; border: 3px solid white; object-fit: cover; animation: move-delivery 20s linear infinite; }
+        @keyframes move-delivery { 0% { top: 85%; left: 15%;} 20% { top: 60%; left: 40%;} 40% { top: 55%; left: 75%;} 60% { top: 30%; left: 60%;} 80% { top: 20%; left: 30%;} 100% { top: 10%; left: 10%;} }
+        .order-status-card { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px 20px 20px; background: linear-gradient(to top, #1A1A1A 70%, transparent 100%); }
+        .order-status-content { background: var(--surface-color); border: 1px solid var(--border-color); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 20px; border-radius: var(--border-radius-lg); color: var(--text-primary); }
+        .order-command-buttons { display: flex; gap: 15px; margin: 20px; padding: 20px; background-color: var(--surface-color); border-radius: var(--border-radius-lg); backdrop-filter: blur(20px); }
+        .order-command-buttons .action-button { margin-top: 0; }
+        #upi-qr-code { border-radius: var(--border-radius-md); margin: 1rem auto; display: block; }
+        
+        .order-history-item { cursor: pointer; }
+        #order-detail-modal-content .billing-row { font-size: 1.1rem; }
+        .notification-item, .order-history-item { background-color: var(--surface-color); border-radius: var(--border-radius-md); padding: 15px; margin-bottom: 10px; }
+
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translate(-50%, 50px); background-color: var(--surface-color); backdrop-filter: blur(10px); color: var(--text-primary); padding: 15px 25px; border-radius: var(--border-radius-lg); z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.4s ease; box-shadow: 0 5px 20px var(--shadow-color); }
+        #toast.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; }
+    </style>
+</head>
+<body class="dark-mode">
+    <div id="splash-screen"><i class="fas fa-utensils"></i></div>
+    <div class="app-container">
+        <div id="home-page" class="page active">
+            <header class="app-header">
+                <div class="location-info">
+                    <div class="location-name">Hanamkonda</div>
+                    <div class="location-desc">What will you eat today?</div>
+                </div>
+                <i id="theme-toggle" class="fas fa-moon action-icon"></i>
+            </header>
+            <main>
+                <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Search restaurants or dishes..."></div>
+                <div id="category-scroll" class="horizontal-scroll-container"></div>
+                <h2 class="section-title">All Restaurants</h2>
+                <div id="restaurantList" class="restaurant-list-grid"></div>
+            </main>
+        </div>
+        <div id="profile-page" class="page"></div>
+        <div id="restaurant-page" class="page-detail"></div>
+        <div id="order-tracker-page" class="page-detail"></div>
+        <div id="order-history-page" class="page-detail"></div>
+        <div id="notifications-page" class="page-detail"></div>
+
+        <div id="cart-modal" class="modal-overlay">
+            <div class="modal-content"></div>
+        </div>
+        <div id="order-detail-modal" class="modal-overlay">
+             <div class="modal-content"></div>
+        </div>
+    </div>
+    <nav class="bottom-nav">
+        <div class="nav-item active" data-target="home-page"><i class="fas fa-home"></i><span>Home</span></div>
+        <div class="nav-item" data-target="profile-page"><i class="fas fa-user"></i><span>Profile</span></div>
+        <div class="nav-item" id="cart-nav-item"><i class="fas fa-shopping-bag"></i><span>Cart</span></div>
+    </nav>
+    <div id="toast"></div>
+
+    <script>
+        class Restaurant {
+            constructor(id, name) { this.id = id; this.name = name; this.observers = []; }
+            subscribe(observer) { this.observers.push(observer); }
+            notify(order) { this.observers.forEach(observer => observer.update(this, order)); }
+        }
+        class DeliveryAgent {
+            constructor(name) { this.name = name; }
+            update(restaurant, order) {
+                const message = `Hey ${this.name}, new order #${order.id} is ready for pickup at ${restaurant.name}!`;
+                appState.notifications.unshift({ date: new Date(), message });
+            }
+        }
+        class DeliveryFeeStrategy { calculate() { throw new Error("Override this!"); } }
+        class SlowDelivery extends DeliveryFeeStrategy { calculate() { return 20.00; } }
+        class StandardDelivery extends DeliveryFeeStrategy { calculate() { return 40.00; } }
+        class ExpressDelivery extends DeliveryFeeStrategy { calculate() { return 75.00; } }
+        class CheckoutService {
+            constructor() { this.deliveryStrategy = new StandardDelivery(); }
+            setStrategy(strategy) { this.deliveryStrategy = strategy; }
+            calculateFee() { return this.deliveryStrategy.calculate(); }
+        }
+        class Command { execute() { throw new Error("Override this!"); } }
+        class OrderService {
+            place(order) {
+                const restaurant = app.restaurantSubjects.find(r => r.id === order.items[0].restaurantId);
+                if (restaurant) restaurant.notify(order);
+                renderManager.orderTracker(order);
+                viewManager.openDetail(app.dom.orderTrackerPage);
+            }
+            cancel(order) {
+                alert(`Order #${order.id} has been canceled.`);
+                viewManager.closeDetail(app.dom.orderTrackerPage);
+            }
+            track(order) {
+                alert(`Tracking Order #${order.id}:\nStatus: ${order.status}\nAgent: ${order.agent.name}`);
+            }
+        }
+        class PlaceOrderCommand extends Command {
+            constructor(receiver, order) { super(); this.receiver = receiver; this.order = order; }
+            execute() { this.receiver.place(this.order); }
+        }
+        class CancelOrderCommand extends Command {
+            constructor(receiver, order) { super(); this.receiver = receiver; this.order = order; }
+            execute() { this.receiver.cancel(this.order); }
+        }
+        class TrackOrderCommand extends Command {
+            constructor(receiver, order) { super(); this.receiver = receiver; this.order = order; }
+            execute() { this.receiver.track(this.order); }
+        }
+
+        const appData = {
+            restaurants: [
+                { id: 1, name: "Paradise Biryani", tags: ["Biryani", "Hyderabadi"], rating: 4.5, deliveryTime: 25, offers: ["50% OFF up to 100"], image: "https://images.pexels.com/photos/12737656/pexels-photo-12737656.jpeg?auto=compress&cs=tinysrgb&w=600", menu: { "Recommended": [{id:101, name:"Chicken Dum Biryani", price: 350}, {id:102, name:"Mutton Dum Biryani", price: 450}], "Main Course": [{id:103, name:"Veg Biryani", price:280}] }},
+                { id: 2, name: "Domino's Pizza", tags: ["Pizza", "Fast Food"], rating: 4.2, deliveryTime: 30, offers: ["FLAT 125 OFF"], image: "https://images.pexels.com/photos/1146760/pexels-photo-1146760.jpeg?auto=compress&cs=tinysrgb&w=600", menu: { "Pizzas": [{id:201, name:"Margherita", price: 300}, {id:202, name:"Pepperoni Pizza", price: 450}], "Sides": [{id:203, name:"Garlic Bread", price:150}]}},
+                { id: 3, name: "Beijing Bites", tags: ["Chinese", "Asian"], rating: 4.6, deliveryTime: 22, offers: ["Free Delivery"], image: "https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=600", menu: {"Noodles & Rice": [{id:301, name:"Hakka Noodles", price: 220}, {id:302, name:"Schezwan Fried Rice", price: 240}], "Starters": [{id:303, name:"Chilli Paneer", price: 250}]}},
+                { id: 4, name: "Cream Stone", tags: ["Desserts", "Ice Cream"], rating: 4.8, deliveryTime: 15, offers: [], image: "https://images.pexels.com/photos/1343504/pexels-photo-1343504.jpeg?auto=compress&cs=tinysrgb&w=600", menu: { "Concepts": [{id:501, name:"Chocolate Overload", price: 220}, {id:502, name:"Fruit Exotica", price: 240}], "Milkshakes": [{id:503, name:"Oreo Shake", price: 180}]}},
+                { id: 5, name: "Subway", tags: ["Healthy", "Sandwiches"], rating: 4.1, deliveryTime: 20, offers: ["BOGO on Footlongs"], image: "https://images.pexels.com/photos/1647177/pexels-photo-1647177.jpeg?auto=compress&cs=tinysrgb&w=600", menu: { "Signature Subs": [{id:701, name:"Paneer Tikka Sub", price: 280}, {id:702, name:"Chicken Teriyaki", price: 320}], "Salads": [{id:703, name:"Veggie Delight Salad", price: 250}]}},
+                { id: 6, name: "Burger King", tags: ["Burgers", "Fast Food"], rating: 4.0, deliveryTime: 25, offers: [], image: "https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=600", menu: { "Whoppers": [{id:901, name:"Mutton Whopper", price: 350}, {id:902, name:"Veg Whopper", price: 280}], "Sides": [{id:903, name:"Fries (Large)", price: 120}]}},
+                { id: 7, name: "Udipi's Hotel", tags: ["South Indian", "Pure Veg"], rating: 4.4, deliveryTime: 18, offers: ["10% OFF on all Dosas"], image: "https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=600", menu: { "Dosas": [{id:401, name:"Masala Dosa", price: 80}, {id:402, name:"Onion Uthappam", price: 90}], "Tiffins": [{id:403, name:"Idli Sambar", price: 60}]}},
+                { id: 8, name: "Karachi Bakery", tags: ["Bakery", "Desserts"], rating: 4.9, deliveryTime: 35, offers: [], image: "https://images.pexels.com/photos/1721934/pexels-photo-1721934.jpeg?auto=compress&cs=tinysrgb&w=600", menu: { "Biscuits": [{id:801, name:"Fruit Biscuits", price: 250}, {id:802, name:"Osmania Biscuits", price: 200}], "Cakes": [{id:803, name:"Choc. Truffle Pastry", price: 120}]}}
+            ],
+            deliveryAgents: [{name: 'Ravi'}, {name: 'Priya'}, {name: 'Arjun'}],
+            categories: ["All", "Biryani", "Pizza", "Chinese", "Desserts", "Healthy", "Burgers", "South Indian"],
+            coupons: { "FLAT50": { type: "flat", value: 50 }, "SAVE10": { type: "percent", value: 10 } }
+        };
+        const appState = { cart: [], favorites: [], notifications: [], orderHistory: [], currentOrder: null, theme: 'dark', currentCoupon: null };
+        
+        const app = {
+            dom: {},
+            restaurantSubjects: [],
+            agentObservers: [],
+            checkoutService: new CheckoutService(),
+            orderService: new OrderService(),
+            
+            init() {
+                this.dom.body = document.body;
+                this.dom.splashScreen = document.getElementById('splash-screen');
+                this.dom.restaurantList = document.getElementById('restaurantList');
+                this.dom.categoryScroll = document.getElementById('category-scroll');
+                this.dom.restaurantPage = document.getElementById('restaurant-page');
+                this.dom.orderTrackerPage = document.getElementById('order-tracker-page');
+                this.dom.orderHistoryPage = document.getElementById('order-history-page');
+                this.dom.notificationsPage = document.getElementById('notifications-page');
+                this.dom.profilePage = document.getElementById('profile-page');
+                this.dom.cartModal = document.getElementById('cart-modal');
+                this.dom.orderDetailModal = document.getElementById('order-detail-modal');
+                this.dom.themeToggle = document.getElementById('theme-toggle');
+                this.dom.toast = document.getElementById('toast');
+
+                persistenceManager.load();
+                themeManager.init();
+                this.setupObservers();
+                renderManager.all();
+                eventBinder.all();
+                
+                setTimeout(() => {
+                    this.dom.splashScreen.style.opacity = '0';
+                    setTimeout(() => this.dom.splashScreen.style.display = 'none', 500);
+                }, 1500);
+            },
+            setupObservers() {
+                this.agentObservers = appData.deliveryAgents.map(agent => new DeliveryAgent(agent.name));
+                this.restaurantSubjects = appData.restaurants.map(r => {
+                    const restaurant = new Restaurant(r.id, r.name);
+                    this.agentObservers.forEach(agent => restaurant.subscribe(agent));
+                    return restaurant;
+                });
+            }
+        };
+
+        const persistenceManager = {
+            save: () => localStorage.setItem('auraEatsStateV3', JSON.stringify(appState)),
+            load: () => {
+                const saved = localStorage.getItem('auraEatsStateV3');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    Object.assign(appState, parsed);
+                }
+            }
+        };
+        
+        const themeManager = {
+            init: () => {
+                if (appState.theme === 'dark') {
+                    app.dom.body.classList.add('dark-mode');
+                    app.dom.themeToggle.classList.replace('fa-sun', 'fa-moon');
+                } else {
+                    app.dom.body.classList.remove('dark-mode');
+                    app.dom.themeToggle.classList.replace('fa-moon', 'fa-sun');
+                }
+            },
+            toggle: () => {
+                app.dom.body.classList.toggle('dark-mode');
+                appState.theme = app.dom.body.classList.contains('dark-mode') ? 'dark' : 'light';
+                app.dom.themeToggle.className = `fas ${appState.theme === 'dark' ? 'fa-moon' : 'fa-sun'} action-icon`;
+                persistenceManager.save();
+            }
+        };
+
+        const viewManager = {
+            switchPage: (targetId) => {
+                document.querySelector('.page.active').classList.remove('active');
+                document.getElementById(targetId).classList.add('active');
+                document.querySelector('.nav-item.active').classList.remove('active');
+                document.querySelector(`.nav-item[data-target="${targetId}"]`).classList.add('active');
+            },
+            openDetail: (page) => { page.classList.add('active'); },
+            closeDetail: (page) => { page.classList.remove('active'); },
+            openModal: (modal) => modal.classList.add('visible'),
+            closeModal: (modal) => modal.classList.remove('visible'),
+            showToast: (message, isError = false) => {
+                app.dom.toast.textContent = message;
+                app.dom.toast.style.backgroundColor = isError ? 'var(--error-color)' : 'var(--surface-color)';
+                app.dom.toast.classList.add('show');
+                setTimeout(() => app.dom.toast.classList.remove('show'), 3000);
+            }
+        };
+        
+        const renderManager = {
+            all() { this.categories(); this.restaurants(); this.profile(); },
+            restaurants() {
+                app.dom.restaurantList.innerHTML = Array(5).fill(`<div class="skeleton-card"><div class="skeleton-image"></div><div class="skeleton-text-group"><div class="skeleton-text" style="width: 70%"></div><div class="skeleton-text" style="width: 50%"></div></div></div>`).join('');
+                setTimeout(() => {
+                    const restaurants = appData.restaurants; 
+                    app.dom.restaurantList.innerHTML = restaurants.map(r => {
+                        const isFavorited = appState.favorites.includes(r.id);
+                        return `<div class="restaurant-card" data-id="${r.id}"><div class="restaurant-card-image-wrapper"><img class="restaurant-card-image" src="${r.image}"></div><div class="restaurant-card-info"><h3>${r.name}</h3><div class="restaurant-card-meta"><span><i class="fas fa-star"></i> ${r.rating}</span><span><i class="fas fa-clock"></i> ${r.deliveryTime} min</span></div>${r.offers.length > 0 ? `<div class="restaurant-card-offer"><i class="fas fa-tags"></i> ${r.offers[0]}</div>` : ''}</div><i class="fas fa-heart favorite-icon-list" data-id="${r.id}" style="color: ${isFavorited ? '#FF453A' : 'var(--text-secondary)'}; font-size: 1.2rem;"></i></div>`
+                    }).join('');
+                }, 500);
+            },
+            categories: () => { app.dom.categoryScroll.innerHTML = appData.categories.map(c => `<div class="category-card">${c}</div>`).join(''); },
+            profile: () => { app.dom.profilePage.innerHTML = `<div style="text-align: center; padding: 40px 0;"><img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color);"><h2 style="margin: 15px 0 5px 0;">Hasini Rao</h2></div><div style="display: grid; gap: 10px;"><div class="restaurant-card profile-option" data-target="order-history-page"><i class="fas fa-receipt action-icon"></i><div class="restaurant-card-info"><h3>Order History</h3></div></div><div class="restaurant-card profile-option" data-target="notifications-page"><i class="fas fa-bell action-icon"></i><div class="restaurant-card-info"><h3>Notifications</h3></div></div></div>`; },
+            restaurantDetail(id) {
+                const r = appData.restaurants.find(res => res.id === id);
+                if (!r) return;
+                let menuHtml = '';
+                for (const category in r.menu) {
+                    menuHtml += `<h3 class="menu-category-title">${category}</h3>`;
+                    menuHtml += r.menu[category].map(item => `<div class="menu-item"><div class="menu-item-info"><h4>${item.name}</h4><p>₹${item.price}</p></div><button class="add-btn" data-item-id="${item.id}" data-restaurant-id="${r.id}">ADD</button></div>`).join('');
+                }
+                app.dom.restaurantPage.innerHTML = `<div class="detail-header"><img class="detail-hero-image" src="${r.image}"><div class="detail-header-overlay"></div><button class="detail-back-btn"><i class="fas fa-arrow-left"></i></button><button class="detail-fav-btn"><i class="fas fa-heart"></i></button></div><div class="detail-info-card"><h1>${r.name}</h1>${menuHtml}</div>`;
+                
+                const favBtn = app.dom.restaurantPage.querySelector('.detail-fav-btn');
+                if (appState.favorites.includes(id)) favBtn.classList.add('favorited');
+
+                viewManager.openDetail(app.dom.restaurantPage);
+                app.dom.restaurantPage.querySelector('.detail-back-btn').onclick = () => viewManager.closeDetail(app.dom.restaurantPage);
+                favBtn.onclick = () => {
+                    favoriteManager.toggle(id);
+                    favBtn.classList.toggle('favorited');
+                };
+                app.dom.restaurantPage.querySelectorAll('.add-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        const {itemId, restaurantId} = btn.dataset;
+                        const restaurant = appData.restaurants.find(r => r.id == restaurantId);
+                        const allItems = Object.values(restaurant.menu).flat();
+                        const item = allItems.find(m => m.id == itemId);
+                        cartManager.add({ ...item, restaurantId: parseInt(restaurantId) });
+                    };
+                });
+            },
+            cartModal() {
+                const modalContent = app.dom.cartModal.querySelector('.modal-content');
+                let html = `<div class="modal-header"><h2 id="cart-title">Your Cart</h2><button class="modal-close-btn"><i class="fas fa-times"></i></button></div><div id="cart-content-view"><div class="cart-item-list"></div><div class="billing-details"></div><button class="action-button" id="checkout-btn">Proceed to Checkout</button></div>`;
+                modalContent.innerHTML = html;
+                this.updateCartView();
+                modalContent.querySelector('.modal-close-btn').onclick = () => viewManager.closeModal(app.dom.cartModal);
+                modalContent.querySelector('#checkout-btn').onclick = this.renderUpiView;
+            },
+            updateCartView() {
+                const modalContent = app.dom.cartModal.querySelector('.modal-content');
+                if (!modalContent) return;
+                const cartItemList = modalContent.querySelector('.cart-item-list');
+                const checkoutBtn = modalContent.querySelector('#checkout-btn');
+
+                if (appState.cart.length === 0) {
+                    cartItemList.innerHTML = `<p style="text-align:center; padding: 20px 0;">Your cart is empty.</p>`;
+                    modalContent.querySelector('.billing-details').innerHTML = '';
+                    checkoutBtn.style.display = 'none';
+                } else {
+                    cartItemList.innerHTML = appState.cart.map(item => `<div class="cart-item"><div class="cart-item-info"><h4>${item.name}</h4><p>₹${item.price}</p></div><div class="quantity-control"><button class="quantity-btn" data-id="${item.id}" data-change="-1">-</button><span>${item.quantity}</span><button class="quantity-btn" data-id="${item.id}" data-change="1">+</button></div></div>`).join('');
+                    checkoutBtn.style.display = 'block';
+                    this.updateCartBilling();
+                }
+                modalContent.querySelectorAll('.quantity-btn').forEach(btn => btn.onclick = (e) => {
+                    const {id, change} = e.target.dataset;
+                    cartManager.updateQuantity(parseInt(id), parseInt(change));
+                });
+            },
+            updateCartBilling() {
+                const billingDetails = app.dom.cartModal.querySelector('.billing-details');
+                if (!billingDetails) return;
+                const subtotal = appState.cart.reduce((s, i) => s + i.price * i.quantity, 0);
+                
+                let discount = 0;
+                if (appState.currentCoupon) {
+                    if (appState.currentCoupon.type === 'flat') discount = appState.currentCoupon.value;
+                    if (appState.currentCoupon.type === 'percent') discount = subtotal * (appState.currentCoupon.value / 100);
+                }
+                const subtotalAfterDiscount = subtotal - discount;
+                const fee = app.checkoutService.calculateFee();
+                const total = subtotalAfterDiscount + fee;
+
+                billingDetails.innerHTML = `
+                    <div class="delivery-options">
+                        <label><input type="radio" name="delivery-strategy" value="slow" ${app.checkoutService.deliveryStrategy instanceof SlowDelivery ? 'checked' : ''}> Slow (₹20)</label>
+                        <label><input type="radio" name="delivery-strategy" value="standard" ${app.checkoutService.deliveryStrategy instanceof StandardDelivery ? 'checked' : ''}> Standard (₹40)</label>
+                        <label><input type="radio" name="delivery-strategy" value="express" ${app.checkoutService.deliveryStrategy instanceof ExpressDelivery ? 'checked' : ''}> Fast (₹75)</label>
+                    </div>
+                    <div class="coupon-section"><input type="text" id="coupon-input" placeholder="Enter coupon code"><button id="apply-coupon-btn">Apply</button></div>
+                    <div class="billing-row"><span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
+                    ${discount > 0 ? `<div class="billing-row discount-row"><span>Discount</span><span>- ₹${discount.toFixed(2)}</span></div>` : ''}
+                    <div class="billing-row" id="delivery-fee-row"><span>Delivery</span><span>₹${fee.toFixed(2)}</span></div>
+                    <div class="billing-row" id="grand-total-row"><strong>Total</strong><strong>₹${total.toFixed(2)}</strong></div>`;
+                
+                billingDetails.querySelectorAll('input[name="delivery-strategy"]').forEach(radio => radio.onchange = eventBinder.handleStrategyChange);
+                billingDetails.querySelector('#apply-coupon-btn').onclick = couponManager.apply;
+            },
+            handleStrategyChange(e) {
+                let strategy;
+                switch(e.target.value) {
+                    case 'slow': strategy = new SlowDelivery(); break;
+                    case 'express': strategy = new ExpressDelivery(); break;
+                    default: strategy = new StandardDelivery();
+                }
+                app.checkoutService.setStrategy(strategy);
+                renderManager.updateCartBilling();
+            },
+            renderUpiView() {
+                const totalText = app.dom.cartModal.querySelector('#grand-total-row strong:last-child').textContent;
+                const total = parseFloat(totalText.replace('₹', ''));
+                app.dom.cartModal.querySelector('.modal-content').innerHTML = `
+                    <div class="modal-header"><h2>Scan to Pay</h2><button class="modal-close-btn"><i class="fas fa-times"></i></button></div>
+                    <img id="upi-qr-code" src="qrcode.png" alt="UPI QR Code" width="200" height="200">
+                    <h3>Total Amount: ₹${total.toFixed(2)}</h3>
+                    <button class="action-button" id="confirm-payment-btn">I Have Paid, Place Order</button>`;
+                app.dom.cartModal.querySelector('#confirm-payment-btn').onclick = eventBinder.placeOrder;
+                app.dom.cartModal.querySelector('.modal-close-btn').onclick = () => viewManager.closeModal(app.dom.cartModal);
+            },
+            orderTracker(order) {
+                 app.dom.orderTrackerPage.innerHTML = `<div class="map-container" style="background-image: url('https://images.pexels.com/photos/1684151/pexels-photo-1684151.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">
+                            <img src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300" class="delivery-icon">
+                        </div>
+                        <div class="order-status-card">
+                           <div class="order-status-content">
+                             <div id="order-status-text">Order placed for ₹${order.total.toFixed(2)}</div>
+                             <div id="order-status-subtext">Agent ${order.agent.name} is on the way!</div>
+                           </div>
+                        </div>
+                        <div class="order-command-buttons">
+                           <button class="action-button" id="track-order-btn">Track Details</button>
+                           <button class="action-button" id="cancel-order-btn" style="background: var(--error-color)">Cancel Order</button>
+                        </div>
+                        <button class="detail-back-btn" id="close-tracker-btn"><i class="fas fa-arrow-left"></i></button>`;
+                app.dom.orderTrackerPage.querySelector('#close-tracker-btn').onclick = () => viewManager.closeDetail(app.dom.orderTrackerPage);
+                app.dom.orderTrackerPage.querySelector('#track-order-btn').onclick = () => new TrackOrderCommand(app.orderService, appState.currentOrder).execute();
+                app.dom.orderTrackerPage.querySelector('#cancel-order-btn').onclick = () => new CancelOrderCommand(app.orderService, appState.currentOrder).execute();
+            },
+            orderHistory() {
+                 app.dom.orderHistoryPage.innerHTML = `<button class="detail-back-btn"><i class="fas fa-arrow-left"></i></button><div style="padding: 80px 20px 20px 20px;"><h2 class="section-title">Order History</h2><div id="order-history-list"></div></div>`;
+                 const list = app.dom.orderHistoryPage.querySelector('#order-history-list');
+                 if(appState.orderHistory.length === 0) {
+                    list.innerHTML = `<p>No past orders yet.</p>`;
+                 } else {
+                    list.innerHTML = appState.orderHistory.map(order => {
+                        const restaurant = appData.restaurants.find(r => r.id === order.items[0].restaurantId);
+                        return `<div class="restaurant-card order-history-item" data-order-id="${order.id}">
+                                    <div class="restaurant-card-image-wrapper"><img class="restaurant-card-image" src="${restaurant.image}"></div>
+                                    <div class="restaurant-card-info"><h3>${restaurant.name}</h3><div class="restaurant-card-meta"><span>₹${order.total.toFixed(2)}</span><span>${new Date(order.date).toLocaleDateString()}</span></div></div>
+                                </div>`;
+                    }).join('');
+                 }
+                 viewManager.openDetail(app.dom.orderHistoryPage);
+                 app.dom.orderHistoryPage.querySelector('.detail-back-btn').onclick = () => viewManager.closeDetail(app.dom.orderHistoryPage);
+            },
+            notifications() {
+                 app.dom.notificationsPage.innerHTML = `<button class="detail-back-btn"><i class="fas fa-arrow-left"></i></button><div style="padding: 80px 20px 20px 20px;"><h2 class="section-title">Notifications</h2><div id="notification-list"></div></div>`;
+                 const list = app.dom.notificationsPage.querySelector('#notification-list');
+                 if(appState.notifications.length === 0) {
+                    list.innerHTML = `<p>No notifications yet.</p>`;
+                 } else {
+                    list.innerHTML = appState.notifications.map(n => `<div class="notification-item"><p>${n.message}</p><small>${new Date(n.date).toLocaleString()}</small></div>`).join('');
+                 }
+                 viewManager.openDetail(app.dom.notificationsPage);
+                 app.dom.notificationsPage.querySelector('.detail-back-btn').onclick = () => viewManager.closeDetail(app.dom.notificationsPage);
+            },
+        };
+        
+        const cartManager = {
+            add: (itemData) => {
+                if (appState.cart.length > 0 && appState.cart[0].restaurantId !== itemData.restaurantId) {
+                    if (!confirm("Your cart has items from another restaurant. Clear it to add this item?")) return;
+                    appState.cart = [];
+                }
+                const existingItem = appState.cart.find(i => i.id === itemData.id);
+                if (existingItem) { existingItem.quantity++; } else { appState.cart.push({ ...itemData, quantity: 1 }); }
+                viewManager.showToast(`${itemData.name} added to cart`);
+                persistenceManager.save();
+            },
+            updateQuantity: (id, change) => {
+                const item = appState.cart.find(i => i.id === id);
+                if (!item) return;
+                item.quantity += change;
+                if (item.quantity <= 0) { appState.cart = appState.cart.filter(i => i.id !== id); }
+                persistenceManager.save();
+                renderManager.updateCartView();
+            },
+            clear: () => {
+                appState.cart = [];
+                persistenceManager.save();
+                viewManager.showToast('Cart cleared!');
+            }
+        };
+
+        const couponManager = {
+            apply() {
+                const code = document.getElementById('coupon-input').value.toUpperCase();
+                const coupon = appData.coupons[code];
+                if (coupon) {
+                    appState.currentCoupon = coupon;
+                    viewManager.showToast(`Coupon "${code}" applied!`);
+                } else {
+                    appState.currentCoupon = null;
+                    viewManager.showToast('Invalid coupon code.', true);
+                }
+                persistenceManager.save();
+                renderManager.updateCartBilling();
+            }
+        };
+
+        const favoriteManager = {
+            toggle: (id) => {
+                const index = appState.favorites.indexOf(id);
+                if (index > -1) {
+                    appState.favorites.splice(index, 1);
+                    viewManager.showToast('Removed from favorites');
+                } else {
+                    appState.favorites.push(id);
+                    viewManager.showToast('Added to favorites');
+                }
+                persistenceManager.save();
+                renderManager.restaurants();
+            }
+        };
+
+        const eventBinder = {
+            all() {
+                app.dom.themeToggle.onclick = themeManager.toggle;
+                app.dom.restaurantList.onclick = (e) => {
+                    const card = e.target.closest('.restaurant-card');
+                    const favIcon = e.target.closest('.favorite-icon-list');
+                    if (favIcon) {
+                        e.stopPropagation();
+                        favoriteManager.toggle(parseInt(favIcon.dataset.id));
+                    } else if (card) {
+                        renderManager.restaurantDetail(parseInt(card.dataset.id));
+                    }
+                };
+                
+                document.querySelectorAll('.nav-item[data-target]').forEach(item => item.onclick = () => viewManager.switchPage(item.dataset.target));
+                document.getElementById('cart-nav-item').onclick = () => {
+                    renderManager.cartModal();
+                    viewManager.openModal(app.dom.cartModal);
+                };
+                app.dom.profilePage.onclick = (e) => {
+                    const option = e.target.closest('.profile-option');
+                    if (!option) return;
+                    if(option.dataset.target === 'order-history-page') renderManager.orderHistory();
+                    if(option.dataset.target === 'notifications-page') renderManager.notifications();
+                };
+            },
+            placeOrder: () => {
+                const subtotal = appState.cart.reduce((s, i) => s + i.price * i.quantity, 0);
+                let discount = 0;
+                if (appState.currentCoupon) {
+                    if (appState.currentCoupon.type === 'flat') discount = appState.currentCoupon.value;
+                    if (appState.currentCoupon.type === 'percent') discount = subtotal * (appState.currentCoupon.value / 100);
+                }
+                const fee = app.checkoutService.calculateFee();
+                const agent = appData.deliveryAgents[Math.floor(Math.random() * appData.deliveryAgents.length)];
+                appState.currentOrder = { id: Date.now(), items: [...appState.cart], total: (subtotal - discount) + fee, status: 'Placed', agent, date: new Date() };
+                appState.orderHistory.unshift(appState.currentOrder);
+                const command = new PlaceOrderCommand(app.orderService, appState.currentOrder);
+                command.execute();
+                appState.cart = [];
+                appState.currentCoupon = null;
+                persistenceManager.save();
+                viewManager.closeModal(app.dom.cartModal);
+            },
+        };
+        
+        app.init();
+    </script>
+</body>
+</html>
